@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>TourHub test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Тури</h1>
+    <div id="tours">Завантаження...</div>
+    <script>
+        $.ajax({
+            url: "http://localhost:8000/api/v1/tours/",
+            method: "GET",
+            success: function (tours) {
+                $("#tours").empty();
+                tours.forEach(function (tour) {
+                    $("#tours").append("<p>" + tour.title + " — " + tour.price + " грн</p>");
+                });
+            },
+            error: function () {
+                $("#tours").text("Помилка запиту (дивись консоль браузера)");
+            }
+        });
+    </script>
+</body>
+</html>
