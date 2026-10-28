@@ -8,6 +8,22 @@ TourHub - сайт, де зібрані тури від різних туроп�
 
 Зареєстрований користувач має профіль із даними про себе та історією бронювань. Він додає тури в кошик (із вказанням кількості мандрівників) і натискає «Забронювати» - бронювання створюється одразу, без оплати та додаткових даних. Також є сторінка «Про нас» з контактами, умовами бронювання та скасування.
 
+## Як запустити проєкт
+
+```bash
+git clone https://github.com/<логін>/TourHub.git
+cd TourHub
+python -m venv .venv
+.venv\Scripts\activate                 # Windows; Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env                 # Linux/macOS: cp .env.example .env  → впишіть SECRET_KEY
+python manage.py migrate
+python manage.py createsuperuser       # для /admin/ (додати категорії)
+python manage.py runserver
+```
+
+Бекенд: http://localhost:8000 · API: http://localhost:8000/api/v1/ · Фронтенд (окремий репозиторій): http://localhost:5173
+
 ## Загальні правила API
 
 - Базовий префікс: `/api/v1`
