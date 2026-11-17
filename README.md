@@ -1,320 +1,329 @@
-# TourHub - каталог турів від туроператорів
+# TourHub — бекенд
 
-## Опис
+REST API каталогу турів від різних туроператорів. Тури можна переглядати за туроператорами й напрямками. Зареєстровані користувачі додають і редагують тури, а адміністратори керують усіма даними.
 
-TourHub - сайт, де зібрані тури від різних туроператорів. Відвідувач може переглянути список турів, знайти потрібний за назвою, відфільтрувати за туроператором, напрямком і типом відпочинку та відсортувати за ціною чи популярністю. На сторінці туру - детальна інформація: дати, тривалість, ціна, кількість вільних місць, опис, туроператор.
+Стек: Django 6.1, Django REST Framework, djangorestframework-simplejwt (JWT), django-cors-headers, SQLite.
 
-Є сторінки туроператорів (на сторінці оператора - усі його тури) і напрямків (усі тури в цей напрямок). Дані (тури, туроператорів, напрямки) можна додавати, редагувати й видаляти.
+Фронтенд (окремий репозиторій): [TourHub_front](https://github.com/HliebOcheretianyi/TourHub_front)
 
-Зареєстрований користувач має профіль із даними про себе та історією бронювань. Він додає тури в кошик (із вказанням кількості мандрівників) і натискає «Забронювати» - бронювання створюється одразу, без оплати та додаткових даних. Також є сторінка «Про нас» з контактами, умовами бронювання та скасування.
+## Зміст
 
-## Як запустити проєкт
+- [Запуск](#запуск)
+- [Структура проєкту](#структура-проєкту)
+- [Загальні правила API](#загальні-правила-api)
+- [Автентифікація (JWT)](#автентифікація-jwt)
+- [Права доступу](#права-доступу)
+- [Ендпоінти: auth](#ендпоінти-auth)
+- [Ендпоінти: тури, туроператори, напрямки, категорії](#ендпоінти-тури-туроператори-напрямки-категорії)
+- [Postman](#postman)
+- [Схема бази даних](#схема-бази-даних)
+
+## Запуск
 
 ```bash
-git clone https://github.com/<логін>/TourHub.git
+git clone https://github.com/HliebOcheretianyi/TourHub.git
 cd TourHub
-python -m venv .venv
-.venv\Scripts\activate                 # Windows; Linux/macOS: source .venv/bin/activate
+python -m venv venv
+venv\Scripts\activate                  # Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
-copy .env.example .env                 # Linux/macOS: cp .env.example .env  → впишіть SECRET_KEY
+copy .env.example .env                 # Linux/macOS: cp .env.example .env, потім впишіть SECRET_KEY
 python manage.py migrate
-python manage.py createsuperuser       # для /admin/ (додати категорії)
+python manage.py createsuperuser       # адміністратор (is_staff = True)
 python manage.py runserver
 ```
 
-Бекенд: http://localhost:8000 · API: http://localhost:8000/api/v1/ · Фронтенд (окремий репозиторій): http://localhost:5173
+- API: http://localhost:8000/api/v1/
+- Адмін-панель: http://localhost:8000/admin/ (там же додаються категорії)
+- CORS дозволено для фронтенду на `http://localhost:5173`
+
+## Структура проєкту
+
+| Папка | Що містить |
+|---|---|
+| `tourhub/` | Налаштування проєкту, кореневі URL-и |
+| `tours/` | Моделі, серіалізатори та views для турів, туроператорів, напрямків і категорій |
+| `accounts/` | Реєстрація, логін (JWT), оновлення токена, `/me`, класи permissions |
+| `postman/` | Postman-колекція з усіма запитами |
 
 ## Загальні правила API
 
-- Базовий префікс: `/api/v1`
-- Дані передаються у форматі JSON.
-- Ресурси - іменники у множині, дія визначається HTTP-методом.
-- Оновлення - лише `PUT` (передається повний обʼєкт).
-- Ціни - цілі числа, гривні. Дати - ISO 8601 (`2026-12-20T08:00:00`).
-- Користувацькі ендпоінти (`/users/me`, `/cart`, `/bookings`) працюють з поточним авторизованим користувачем; без авторизації повертають `401`.
-- Помилки мають вигляд `{ "detail": "опис помилки" }`.
-- Додавання, редагування й видалення турів, туроператорів і напрямків поки доступне без обмежень; розмежування прав буде додано разом з авторизацією.
+- Базовий префікс: `/api/v1/`. Усі URL закінчуються на `/`.
+- Формат даних: JSON (`Content-Type: application/json`).
+- Оновлення робиться лише через `PUT`, тож передавайте повний об'єкт.
+- Ціни задаються цілими числами в гривнях. Дати мають формат ISO 8601, наприклад `2026-12-20T08:00:00Z`.
+- Зв'язані об'єкти передаються й повертаються як id: `"operator": 3`, `"categories": [1, 2]`.
 
-Статус-коди: `200` OK, `201` створено, `400` некоректні дані, `401` не авторизовано, `404` не знайдено.
+Формати помилок:
 
----
+```json
+{ "detail": "Тур з id=5 не знайдено" }
+```
 
-## Ендпоінти
+```json
+{ "email": ["Введіть коректну адресу електронної пошти."], "password_confirm": ["Паролі не збігаються."] }
+```
 
-### Тури (`tours`)
+Перший формат описує помилку всього запиту, другий є помилкою валідації (`400`) з переліком повідомлень для кожного поля.
 
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/tours` | Список турів із пошуком, фільтрами, сортуванням |
-| GET | `/api/v1/tours/{id}` | Сторінка туру |
-| POST | `/api/v1/tours` | Додати тур |
-| PUT | `/api/v1/tours/{id}` | Оновити тур |
-| DELETE | `/api/v1/tours/{id}` | Видалити тур |
-
-**GET `/api/v1/tours`** - query-параметри (усі необовʼязкові):
-
-| Параметр | Опис |
+| Статус | Значення |
 |---|---|
-| `search` | пошук за назвою туру або назвою туроператора |
-| `operator` | id туроператора |
-| `destination` | id напрямку |
-| `category` | id категорії |
-| `sort` | `price_asc`, `price_desc`, `popular` |
-| `page`, `limit` | сторінка та кількість на сторінці |
+| `200` | OK |
+| `201` | Створено |
+| `204` | Видалено, тіла немає |
+| `400` | Некоректні дані |
+| `401` | Немає токена або він недійсний чи прострочений |
+| `403` | Токен валідний, але недостатньо прав |
+| `404` | Об'єкт не знайдено |
+| `409` | Конфлікт: не можна видалити туроператора або напрямок, до яких прив'язані тури |
 
-Приклад: `GET /api/v1/tours?destination=2&category=1&sort=price_asc&limit=20&page=1`
+## Автентифікація (JWT)
+
+Використовуються два токени:
+
+| Токен | Час життя | Для чого |
+|---|---|---|
+| `access` | 5 хвилин | Передається в кожному захищеному запиті |
+| `refresh` | 1 день | Потрібен лише для отримання нового `access` |
+
+**Як передавати токен:** заголовок
+
+```
+Authorization: Bearer <access>
+```
+
+**Схема роботи:**
+
+1. `POST /api/v1/auth/login/` повертає `access` і `refresh`.
+2. Захищені запити надсилаються з заголовком `Authorization: Bearer <access>`.
+3. Коли `access` прострочується, сервер відповідає `401` з `"code": "token_not_valid"`.
+4. Клієнт надсилає `POST /api/v1/auth/token/refresh/` з `refresh`, отримує новий `access` і повторює запит.
+5. Якщо прострочився і `refresh`, користувач логіниться знову.
+
+**Logout** виконується на клієнті: фронтенд видаляє обидва токени зі сховища. Окремого ендпоінта немає.
+
+Паролі зберігаються лише в захешованому вигляді (PBKDF2, стандартний механізм Django).
+
+## Права доступу
+
+Ролі:
+
+- **анонім** — запит без токена;
+- **користувач** — будь-який зареєстрований користувач;
+- **адміністратор** — користувач з `is_staff = True` (створюється через `createsuperuser` або в адмін-панелі).
+
+| Дія | Анонім | Користувач | Адмін |
+|---|---|---|---|
+| `GET` будь-яких турів, туроператорів, напрямків, категорій | ✅ | ✅ | ✅ |
+| `POST /tours/`, `PUT /tours/{id}/` | 401 | ✅ | ✅ |
+| `DELETE /tours/{id}/` | 401 | 403 | ✅ |
+| `POST`, `PUT`, `DELETE` для `/operators/` і `/destinations/` | 401 | 403 | ✅ |
+| `GET /auth/me/` | 401 | ✅ | ✅ |
+
+Приклади відповідей:
+
+```json
+// 401, запит без токена
+{ "detail": "Облікові дані не були надані." }
+```
+
+```json
+// 403, користувач намагається видалити тур
+{ "detail": "Видаляти тури можуть лише адміністратори." }
+```
+
+```json
+// 403, користувач намагається змінити туроператора чи напрямок
+{ "detail": "Ця дія доступна лише адміністраторам." }
+```
+
+## Ендпоінти: auth
+
+| Метод | URL | Токен | Призначення |
+|---|---|---|---|
+| POST | `/api/v1/auth/register/` | — | Реєстрація |
+| POST | `/api/v1/auth/login/` | — | Логін, видає `access` і `refresh` |
+| POST | `/api/v1/auth/token/refresh/` | — | Новий `access` за `refresh` |
+| GET | `/api/v1/auth/me/` | `access` | Дані поточного користувача |
+
+### POST `/api/v1/auth/register/`
+
+| Поле | Обов'язкове | Обмеження |
+|---|---|---|
+| `username` | так | до 150 символів; літери, цифри, `@ . + - _`; унікальний |
+| `first_name` | ні | до 150 символів, може бути порожнім |
+| `last_name` | ні | до 150 символів, може бути порожнім |
+| `email` | так | коректний формат, до 254 символів, унікальний |
+| `password` | так | від 8 до 128 символів; не лише цифри, не надто поширений, не схожий на username чи email |
+| `password_confirm` | так | має збігатися з `password` |
+
+Request:
+
+```json
+{
+  "username": "olena",
+  "first_name": "Олена",
+  "last_name": "Коваль",
+  "email": "olena@example.com",
+  "password": "Sunny-Trip-2026",
+  "password_confirm": "Sunny-Trip-2026"
+}
+```
+
+Response `201`:
+
+```json
+{ "id": 7, "username": "olena", "first_name": "Олена", "last_name": "Коваль", "email": "olena@example.com" }
+```
+
+Response `400`, приклад:
+
+```json
+{
+  "username": ["Користувач з таким ім'ям вже існує."],
+  "email": ["Користувач з таким email уже існує."],
+  "password_confirm": ["Паролі не збігаються."]
+}
+```
+
+### POST `/api/v1/auth/login/`
+
+Request:
+
+```json
+{ "username": "olena", "password": "Sunny-Trip-2026" }
+```
 
 Response `200`:
 
 ```json
-[
-  {
-    "id": 1,
-    "title": "Тиждень у Єгипті: все включено",
-    "price": 28500,
-    "duration_days": 7,
-    "departure_date": "2026-12-20T08:00:00",
-    "seats_available": 12,
-    "operator": { "id": 3, "name": "Sunny Travel" },
-    "destination": { "id": 2, "name": "Хургада", "country": "Єгипет" },
-    "categories": [ { "id": 1, "name": "Пляжний відпочинок" } ]
-  }
-]
+{ "refresh": "eyJhbGciOiJIUzI1NiIs...", "access": "eyJhbGciOiJIUzI1NiIs..." }
 ```
 
-**GET `/api/v1/tours/{id}`** - Response `200`:
+Payload `access`-токена, крім стандартних `user_id`, `exp`, `iat`, `jti`, містить `username` і `is_staff`.
+
+- `400` — не передано `username` або `password`.
+- `401` — невірні облікові дані: `{ "detail": "No active account found with the given credentials" }`.
+
+### POST `/api/v1/auth/token/refresh/`
+
+Request:
+
+```json
+{ "refresh": "eyJhbGciOiJIUzI1NiIs..." }
+```
+
+Response `200`:
+
+```json
+{ "access": "eyJhbGciOiJIUzI1NiIs..." }
+```
+
+- `400` — не передано `refresh`.
+- `401` — `refresh` недійсний або прострочений: `{ "detail": "Token is invalid or expired", "code": "token_not_valid" }`.
+
+### GET `/api/v1/auth/me/`
+
+Заголовок: `Authorization: Bearer <access>`
+
+Response `200`:
+
+```json
+{ "id": 7, "username": "olena", "first_name": "Олена", "last_name": "Коваль", "email": "olena@example.com", "is_staff": false }
+```
+
+- `401` — немає токена або він прострочений.
+
+## Ендпоінти: тури, туроператори, напрямки, категорії
+
+Для запитів на запис потрібен заголовок `Authorization: Bearer <access>`, див. [Права доступу](#права-доступу).
+
+### Тури
+
+| Метод | URL | Доступ | Призначення |
+|---|---|---|---|
+| GET | `/api/v1/tours/` | усі | Список турів |
+| GET | `/api/v1/tours/{id}/` | усі | Один тур |
+| POST | `/api/v1/tours/` | користувач, адмін | Створити тур |
+| PUT | `/api/v1/tours/{id}/` | користувач, адмін | Оновити тур |
+| DELETE | `/api/v1/tours/{id}/` | адмін | Видалити тур |
+
+Об'єкт туру (так виглядає response `GET` і так само формується request body для `POST`/`PUT`, але без `id`):
 
 ```json
 {
   "id": 1,
   "title": "Тиждень у Єгипті: все включено",
-  "description": "Перельот, проживання в готелі 5*, харчування все включено, трансфер.",
+  "description": "Перельот, готель 5*, харчування все включено, трансфер.",
   "price": 28500,
   "duration_days": 7,
-  "departure_date": "2026-12-20T08:00:00",
+  "departure_date": "2026-12-20T08:00:00Z",
   "seats_available": 12,
-  "operator": { "id": 3, "name": "Sunny Travel" },
-  "destination": { "id": 2, "name": "Хургада", "country": "Єгипет" },
-  "categories": [ { "id": 1, "name": "Пляжний відпочинок" } ]
+  "operator": 3,
+  "destination": 2,
+  "categories": [1]
 }
 ```
 
-Response `404`, якщо туру немає.
+| Запит | Статуси |
+|---|---|
+| `GET /tours/` | `200` (масив турів) |
+| `GET /tours/{id}/` | `200`, `404` |
+| `POST /tours/` | `201`, `400`, `401` |
+| `PUT /tours/{id}/` | `200`, `400`, `401`, `404` |
+| `DELETE /tours/{id}/` | `204`, `401`, `403`, `404` |
 
-**POST `/api/v1/tours`** - Request body:
+### Туроператори
 
-```json
-{
-  "title": "Лижний тур у Буковелі",
-  "description": "5 днів катання, проживання в готелі, сніданки.",
-  "price": 12000,
-  "duration_days": 5,
-  "departure_date": "2027-01-10T07:00:00",
-  "seats_available": 20,
-  "operator_id": 3,
-  "destination_id": 5,
-  "category_ids": [2]
-}
-```
-
-Response `201` - створений тур (формат як у `GET /tours/{id}`). Response `400` - некоректні дані.
-
-**PUT `/api/v1/tours/{id}`** - Request body як у `POST`. Response `200` - оновлений тур; `400`; `404`.
-
-**DELETE `/api/v1/tours/{id}`** - без body. Response `200` - видалений тур (формат як у `GET /tours/{id}`); `404`.
-
----
-
-### Туроператори (`operators`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/operators` | Список туроператорів |
-| GET | `/api/v1/operators/{id}` | Сторінка туроператора |
-| GET | `/api/v1/operators/{id}/tours` | Усі тури туроператора |
-| POST | `/api/v1/operators` | Додати туроператора |
-| PUT | `/api/v1/operators/{id}` | Оновити туроператора |
-| DELETE | `/api/v1/operators/{id}` | Видалити туроператора |
-
-**GET `/api/v1/operators`** - Response `200`:
+| Метод | URL | Доступ | Призначення |
+|---|---|---|---|
+| GET | `/api/v1/operators/` | усі | Список туроператорів |
+| GET | `/api/v1/operators/{id}/` | усі | Один туроператор |
+| GET | `/api/v1/operators/{id}/tours/` | усі | Усі тури туроператора |
+| POST | `/api/v1/operators/` | адмін | Створити |
+| PUT | `/api/v1/operators/{id}/` | адмін | Оновити |
+| DELETE | `/api/v1/operators/{id}/` | адмін | Видалити |
 
 ```json
-[
-  { "id": 3, "name": "Sunny Travel", "description": "Пляжні та екскурсійні тури з 2010 року.", "email": "info@sunny.example", "phone": "+380441234567" }
-]
+{ "id": 3, "name": "Sunny Travel", "description": "Пляжні та екскурсійні тури з 2010 року.", "email": "info@sunny.example", "phone": "+380441234567" }
 ```
 
-**GET `/api/v1/operators/{id}`** - Response `200`: один обʼєкт у тому ж форматі; `404`.
+| Запит | Статуси |
+|---|---|
+| `GET /operators/`, `GET /operators/{id}/`, `GET /operators/{id}/tours/` | `200`, `404` |
+| `POST /operators/` | `201`, `400`, `401`, `403` |
+| `PUT /operators/{id}/` | `200`, `400`, `401`, `403`, `404` |
+| `DELETE /operators/{id}/` | `204`, `401`, `403`, `404`, `409` (за туроператором є тури) |
 
-**GET `/api/v1/operators/{id}/tours`** - підтримує `sort`, `page`, `limit`. Response `200` - список турів (формат як у `GET /tours`); `404`, якщо туроператора немає.
+### Напрямки
 
-**POST `/api/v1/operators`** - Request body:
+| Метод | URL | Доступ | Призначення |
+|---|---|---|---|
+| GET | `/api/v1/destinations/` | усі | Список напрямків |
+| GET | `/api/v1/destinations/{id}/` | усі | Один напрямок |
+| GET | `/api/v1/destinations/{id}/tours/` | усі | Усі тури в напрямок |
+| POST | `/api/v1/destinations/` | адмін | Створити |
+| PUT | `/api/v1/destinations/{id}/` | адмін | Оновити |
+| DELETE | `/api/v1/destinations/{id}/` | адмін | Видалити |
 
 ```json
-{ "name": "Sunny Travel", "description": "Пляжні та екскурсійні тури з 2010 року.", "email": "info@sunny.example", "phone": "+380441234567" }
+{ "id": 2, "name": "Хургада", "country": "Єгипет" }
 ```
 
-Response `201` - створений туроператор; `400`.
+Статуси такі самі, як у туроператорів, зокрема `409` при видаленні напрямку, до якого прив'язані тури.
 
-**PUT `/api/v1/operators/{id}`** - Request body як у `POST`. Response `200`; `400`; `404`.
+### Категорії
 
-**DELETE `/api/v1/operators/{id}`** - Response `200` - видалений туроператор; `404`.
-
----
-
-### Напрямки (`destinations`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/destinations` | Список напрямків |
-| GET | `/api/v1/destinations/{id}` | Сторінка напрямку |
-| GET | `/api/v1/destinations/{id}/tours` | Усі тури в цей напрямок |
-| POST | `/api/v1/destinations` | Додати напрямок |
-| PUT | `/api/v1/destinations/{id}` | Оновити напрямок |
-| DELETE | `/api/v1/destinations/{id}` | Видалити напрямок |
-
-**GET `/api/v1/destinations`** - Response `200`:
-
-```json
-[ { "id": 2, "name": "Хургада", "country": "Єгипет" } ]
-```
-
-**GET `/api/v1/destinations/{id}`** - Response `200`: один обʼєкт у тому ж форматі; `404`.
-
-**GET `/api/v1/destinations/{id}/tours`** - підтримує `sort`, `page`, `limit`. Response `200` - список турів (формат як у `GET /tours`); `404`, якщо напрямку немає.
-
-**POST `/api/v1/destinations`** - Request body: `{ "name": "Хургада", "country": "Єгипет" }`. Response `201` - створений напрямок; `400`.
-
-**PUT `/api/v1/destinations/{id}`** - Request body як у `POST`. Response `200`; `400`; `404`.
-
-**DELETE `/api/v1/destinations/{id}`** - Response `200` - видалений напрямок; `404`.
-
----
-
-### Категорії (`categories`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/categories` | Список типів відпочинку (для фільтра); самі категорії додаються через адмін-панель |
-
-Response `200`:
+| Метод | URL | Доступ | Призначення |
+|---|---|---|---|
+| GET | `/api/v1/categories/` | усі | Список типів відпочинку |
 
 ```json
 [ { "id": 1, "name": "Пляжний відпочинок" }, { "id": 2, "name": "Гірськолижний" } ]
 ```
 
----
+Категорії додаються через адмін-панель.
 
-### Реєстрація та вхід
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| POST | `/api/v1/auth/register` | Реєстрація |
-| POST | `/api/v1/auth/login` | Вхід |
-
-**POST `/api/v1/auth/register`** - Request body:
-
-```json
-{ "username": "olena", "email": "olena@example.com", "first_name": "Олена", "last_name": "Коваль", "password": "secret123" }
-```
-
-Response `201`: `{ "id": 7, "username": "olena", "email": "olena@example.com", "first_name": "Олена", "last_name": "Коваль" }`. Response `400` - некоректні дані або імʼя вже зайняте.
-
-**POST `/api/v1/auth/login`** - Request body: `{ "username": "olena", "password": "secret123" }`.
-Response `200` - вхід виконано (що саме отримує клієнт для наступних запитів, буде описано в завданні про авторизацію). Response `400` - не передано імʼя чи пароль; `401` - невірне імʼя або пароль.
-
----
-
-### Профіль (`users/me`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/users/me` | Дані поточного користувача |
-| PUT | `/api/v1/users/me` | Редагувати свої дані |
-
-**GET** - Response `200`: `{ "id": 7, "username": "olena", "email": "olena@example.com", "first_name": "Олена", "last_name": "Коваль" }`; `401`.
-
-**PUT** - Request body: `{ "email": "new@example.com", "first_name": "Олена", "last_name": "Коваль" }`. Response `200` - оновлений профіль; `400`; `401`.
-
----
-
-### Кошик (`cart`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/cart` | Вміст кошика |
-| POST | `/api/v1/cart/items` | Додати тур у кошик |
-| PUT | `/api/v1/cart/items/{id}` | Змінити кількість мандрівників |
-| DELETE | `/api/v1/cart/items/{id}` | Видалити позицію з кошика |
-
-**GET `/api/v1/cart`** - Response `200`; `401`:
-
-```json
-[
-  { "id": 4, "tour": { "id": 1, "title": "Тиждень у Єгипті: все включено", "price": 28500 }, "travelers": 2 }
-]
-```
-
-**POST `/api/v1/cart/items`** - Request body: `{ "tour_id": 1, "travelers": 2 }`. Response `201` - створена позиція (формат як вище); `400` (немає стільки вільних місць, некоректні дані, або цей тур уже є в кошику - тоді змінюйте кількість через `PUT`); `401`; `404` (туру немає).
-
-**PUT `/api/v1/cart/items/{id}`** - Request body: `{ "travelers": 3 }`. Response `200` - оновлена позиція; `400`; `401`; `404`.
-
-**DELETE `/api/v1/cart/items/{id}`** - Response `200` - видалена позиція; `401`; `404`.
-
----
-
-### Бронювання (`bookings`)
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| POST | `/api/v1/bookings` | Забронювати все з кошика |
-| GET | `/api/v1/bookings` | Історія бронювань користувача |
-| GET | `/api/v1/bookings/{id}` | Окреме бронювання |
-
-**POST `/api/v1/bookings`** - без body. Бронювання створюється з поточного кошика: для кожного туру зменшується `seats_available` на кількість мандрівників, ціна фіксується на момент бронювання, після чого кошик очищається. Response `201`:
-
-```json
-{
-  "id": 10,
-  "created_at": "2026-10-12T14:30:00",
-  "total_price": 57000,
-  "items": [
-    { "tour": { "id": 1, "title": "Тиждень у Єгипті: все включено" }, "travelers": 2, "price": 28500 }
-  ]
-}
-```
-
-Response `400` - кошик порожній або для якогось туру вже не вистачає вільних місць (нічого не створюється); `401`.
-
-**GET `/api/v1/bookings`** - Response `200` - список бронювань у форматі вище; `401`.
-
-**GET `/api/v1/bookings/{id}`** - Response `200` - одне бронювання; `401`; `404`.
-
----
-
-### Про нас
-
-| Метод | Ендпоінт | Призначення |
-|---|---|---|
-| GET | `/api/v1/about` | Контакти, умови бронювання та скасування |
-
-Response `200`:
-
-```json
-{
-  "contacts": { "email": "info@tourhub.example", "phone": "+380441234567", "address": "Київ, вул. Хрещатик, 1" },
-  "booking_terms": "Бронювання підтверджується одразу після оформлення.",
-  "cancellation_terms": "Безкоштовне скасування за 14 днів до виїзду."
-}
-```
-
----
-
+#
 ## Схема бази даних
 
-
 ![DB schema](db-schema.drawio.png)
-
-
-
-Звʼязок `TOUR` - `CATEGORY` багато-до-багатьох (проміжна таблиця `tour_categories`). `BOOKING_ITEM.price` зберігає ціну туру на момент бронювання.
