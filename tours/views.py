@@ -7,6 +7,7 @@ from .models import TourOperator, Destination, Category, Tour
 from .serializers import (
     TourOperatorSerializer, DestinationSerializer, CategorySerializer, TourSerializer,
 )
+from accounts.permissions import IsAdminOrReadOnly, TourPermission
 
 
 def not_found(text):
@@ -18,6 +19,7 @@ def conflict(text):
 
 
 class DestinationList(APIView):
+    permission_classes = [IsAdminOrReadOnly]
     def get(self, request, format=None):
         destinations = Destination.objects.all()
         serializer = DestinationSerializer(destinations, many=True)
@@ -32,6 +34,7 @@ class DestinationList(APIView):
 
 
 class DestinationDetail(APIView):
+    permission_classes = [IsAdminOrReadOnly]
     def get_object(self, pk):
         try:
             return Destination.objects.get(pk=pk)
@@ -75,6 +78,7 @@ def category_list(request):
 
 
 class TourList(APIView):
+    permission_classes = [TourPermission]
     def get(self, request, format=None):
         tours = Tour.objects.all()
         return Response(TourSerializer(tours, many=True).data)
@@ -88,6 +92,7 @@ class TourList(APIView):
 
 
 class TourDetail(APIView):
+    permission_classes = [TourPermission]
     def get_object(self, pk):
         try:
             return Tour.objects.get(pk=pk)
@@ -137,6 +142,7 @@ class DestinationTours(APIView):
 
 
 class OperatorList(APIView):
+    permission_classes = [IsAdminOrReadOnly]
     def get(self, request, format=None):
         operators = TourOperator.objects.all()
         serializer = TourOperatorSerializer(operators, many=True)
@@ -151,6 +157,7 @@ class OperatorList(APIView):
 
 
 class OperatorDetail(APIView):
+    permission_classes = [IsAdminOrReadOnly]
     def get_object(self, pk):
         try:
             return TourOperator.objects.get(pk=pk)

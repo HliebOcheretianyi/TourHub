@@ -1,7 +1,19 @@
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import RegisterSerializer, TourHubTokenSerializer, MeSerializer
 
-from .serializers import RegisterSerializer
+
+class LoginView(TokenObtainPairView):
+    serializer_class = TourHubTokenSerializer
+
+
+class MeView(generics.RetrieveAPIView):
+    serializer_class = MeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class RegisterView(generics.CreateAPIView):
