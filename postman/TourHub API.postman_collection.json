@@ -1,0 +1,986 @@
+{
+  "info": {
+    "_postman_id": "5796eeb3-47ee-4c42-92a9-4fbac240ef1a",
+    "name": "TourHub API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "42562155",
+    "_collection_link": "https://go.postman.co/collection/42562155-5796eeb3-47ee-4c42-92a9-4fbac240ef1a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.collectionVariables.set(\"category_id\", pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Operators",
+      "item": [
+        {
+          "name": "Create operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", function () { pm.response.to.have.status(201); });\r\npm.collectionVariables.set(\"operator_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Sunny Travel\",\r\n  \"description\": \"Пляжні та екскурсійні тури з 2010 року.\",\r\n  \"email\": \"info@sunny.example\",\r\n  \"phone\": \"+380441234567\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/operators/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List operators",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Відповідь це масив\", function () { pm.expect(pm.response.json()).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Sunny Travel UA\",\r\n  \"description\": \"Оновлений опис\",\r\n  \"email\": \"info@sunny.example\",\r\n  \"phone\": \"+380441234567\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Destinations",
+      "item": [
+        {
+          "name": "Create destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", function () { pm.response.to.have.status(201); });\r\npm.collectionVariables.set(\"destination_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Каїр\", \"country\": \"Єгипет\"}\t",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/destinations/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List destinations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Відповідь це масив\", function () { pm.expect(pm.response.json()).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/destinations/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Шарм-ель-Шейх\",\r\n    \"country\": \"Єгипет\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/destinations/{{destination_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destination_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/destinations/{{destination_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destination_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Tours",
+      "item": [
+        {
+          "name": "Create tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", function () { pm.response.to.have.status(201); });\r\npm.collectionVariables.set(\"tour_id\", pm.response.json().id);\r\npm.test(\"Тур привʼязаний до нашого оператора\", function () {\r\n    pm.expect(pm.response.json().operator).to.eql(Number(pm.collectionVariables.get(\"operator_id\")));\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Тиждень у Єгипті\",\r\n  \"description\": \"Все включено\",\r\n  \"price\": 28500,\r\n  \"duration_days\": 7,\r\n  \"departure_date\": \"2026-12-20T08:00:00\",\r\n  \"seats_available\": 12,\r\n  \"operator\": {{operator_id}},\r\n  \"destination\": {{destination_id}},\r\n  \"categories\": [{{category_id}}]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List tours",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Відповідь це масив\", function () { pm.expect(pm.response.json()).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tours/{{tour_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                "{{tour_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tours of operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Відповідь це масив\", function () { pm.expect(pm.response.json()).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tours of destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Відповідь це масив\", function () { pm.expect(pm.response.json()).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/destinations/{{destination_id}}/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destination_id}}",
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", function () { pm.response.to.have.status(200); });\r\npm.test(\"Є поле id\", function () { pm.expect(pm.response.json()).to.have.property(\"id\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Тиждень у Єгипті\",\r\n  \"description\": \"Все включено\",\r\n  \"price\": 1221121212,\r\n  \"duration_days\": 7,\r\n  \"departure_date\": \"2026-12-20T08:00:00\",\r\n  \"seats_available\": 12,\r\n  \"operator\": {{operator_id}},\r\n  \"destination\": {{destination_id}},\r\n  \"categories\": [{{category_id}}]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tours/{{tour_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                "{{tour_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Errors",
+      "item": [
+        {
+          "name": "400 Create operator without required fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", function () { pm.response.to.have.status(400); });\r\npm.test(\"Є помилка по полю name\", function () { pm.expect(pm.response.json()).to.have.property(\"name\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\": \"x\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/operators/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 Update operator with blank name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", function () { pm.response.to.have.status(400); });\r\npm.test(\"Є помилка по полю name\", function () { pm.expect(pm.response.json()).to.have.property(\"name\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 Create destination without country",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", function () { pm.response.to.have.status(400); });\r\npm.test(\"Є помилка по полю country\", function () { pm.expect(pm.response.json()).to.have.property(\"country\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Хургада\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/destinations/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 Create tour with invalid data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", function () { pm.response.to.have.status(400); });\r\npm.test(\"Є помилка по полю operator\", function () { pm.expect(pm.response.json()).to.have.property(\"operator\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Тиждень у Єгипті\",\r\n  \"description\": \"Все включено\",\r\n  \"price\": \"abc\",\r\n  \"duration_days\": 7,\r\n  \"departure_date\": \"2026-12-20T08:00:00\",\r\n  \"seats_available\": 12,\r\n  \"operator\": 999,\r\n  \"destination\": {{destination_id}},\r\n  \"categories\": []\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "404 Get non-existent operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", function () { pm.response.to.have.status(404); });\r\npm.test(\"Є повідомлення detail\", function () { pm.expect(pm.response.json()).to.have.property(\"detail\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/9999/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "9999",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "404 Get non-existent tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", function () { pm.response.to.have.status(404); });\r\npm.test(\"Є повідомлення detail\", function () { pm.expect(pm.response.json()).to.have.property(\"detail\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tours/9999/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                "9999",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "404 Tours of non-existent operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", function () { pm.response.to.have.status(404); });\r\npm.test(\"Є повідомлення detail\", function () { pm.expect(pm.response.json()).to.have.property(\"detail\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/9999/tours/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "9999",
+                "tours",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "409 Delete operator that has tours",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 409\", function () { pm.response.to.have.status(409); });\r\npm.test(\"Повідомлення пояснює причину\", function () {\r\n    pm.expect(pm.response.json().detail).to.include(\"Неможливо видалити\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "409 Delete destination that has tours",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 409\", function () { pm.response.to.have.status(409); });\r\npm.test(\"Повідомлення пояснює причину\", function () {\r\n    pm.expect(pm.response.json().detail).to.include(\"Неможливо видалити\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/destinations/{{destination_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destination_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Delete",
+      "item": [
+        {
+          "name": "Delete tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 204\", function () { pm.response.to.have.status(204); });\r\npm.test(\"Тіло порожнє\", function () { pm.expect(pm.response.text()).to.eql(\"\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tours/{{tour_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                "{{tour_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete tour again (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", function () { pm.response.to.have.status(404); });\r\npm.test(\"Є повідомлення detail\", function () { pm.expect(pm.response.json()).to.have.property(\"detail\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tours/{{tour_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tours",
+                "{{tour_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 204\", function () { pm.response.to.have.status(204); });\r\npm.test(\"Тіло порожнє\", function () { pm.expect(pm.response.text()).to.eql(\"\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operators/{{operator_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operators",
+                "{{operator_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 204\", function () { pm.response.to.have.status(204); });\r\npm.test(\"Тіло порожнє\", function () { pm.expect(pm.response.text()).to.eql(\"\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/destinations/{{destination_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destination_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "category_id",
+      "value": ""
+    },
+    {
+      "key": "operator_id",
+      "value": ""
+    },
+    {
+      "key": "destination_id",
+      "value": ""
+    },
+    {
+      "key": "tour_id",
+      "value": ""
+    }
+  ]
+}
