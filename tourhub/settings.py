@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'tours',
+    'rest_framework_simplejwt',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -134,8 +136,25 @@ MAILERS = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:63342",    # вбудований сервер PyCharm (якщо користуєшся)
+    "http://localhost:63342",
     "http://127.0.0.1:63342",
-    "http://localhost:5173",     # React-фронтенд (Vite) із кроку 16
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
