@@ -25,10 +25,10 @@ git clone https://github.com/HliebOcheretianyi/TourHub.git
 cd TourHub
 python -m venv venv
 venv\Scripts\activate                  # Linux/macOS: source venv/bin/activate
-pip install -r requirements.txt
-copy .env.example .env                 # Linux/macOS: cp .env.example .env, потім впишіть SECRET_KEY
+pip install -r requirements.txt        # залежності для запуску і для тестів
+copy .env.example .env                 # Linux/macOS: cp .env.example .env
 python manage.py migrate
-python manage.py createsuperuser       # адміністратор (is_staff = True)
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
@@ -75,6 +75,59 @@ python manage.py runserver
 | `403` | Токен валідний, але недостатньо прав |
 | `404` | Об'єкт не знайдено |
 | `409` | Конфлікт: не можна видалити туроператора або напрямок, до яких прив'язані тури |
+
+## Змінні середовища
+
+Усі налаштування, що відрізняються між машинами, і всі секрети задаються у файлі `.env`
+(він у `.gitignore`). Шаблон із поясненнями: `.env.example`.
+
+| Змінна | Обов'язкова | Приклад | Опис |
+|---|---|---|---|
+| `SECRET_KEY` | так | — | Секретний ключ Django. Згенерувати: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+| `DEBUG` | ні | `True` | Режим налагодження; за замовчуванням `False` |
+| `ALLOWED_HOSTS` | ні | `localhost,127.0.0.1` | Дозволені хости, через кому |
+| `CORS_ALLOWED_ORIGINS` | ні | `http://localhost:5173` | Адреси фронтенду, через кому |
+| `JWT_ACCESS_MINUTES` | ні | `5` | Час життя access-токена, хв |
+| `JWT_REFRESH_DAYS` | ні | `1` | Час життя refresh-токена, днів |
+| `LOG_LEVEL` | ні | `INFO` | `DEBUG`, `INFO`, `WARNING` або `ERROR` |
+
+## Документація API
+
+- Swagger UI: http://localhost:8000/api/docs/
+- ReDoc: http://localhost:8000/api/redoc/
+- OpenAPI-схема (YAML): http://localhost:8000/api/schema/
+
+Схема генерується автоматично з коду (drf-spectacular). Зберегти її у файл:
+
+```bash
+python manage.py spectacular --file schema.yml
+```
+
+Щоб виконувати захищені запити у Swagger: `POST /api/v1/auth/login/` → скопіюйте `access` →
+кнопка **Authorize** → вставте токен.
+
+## Тести
+
+Тести написані на pytest + pytest-django і лежать у `tests/`; спільні фікстури в `conftest.py`.
+Тести використовують окрему тимчасову БД, тож ваші дані не змінюються. Потрібен `.env` з `SECRET_KEY`.
+
+```bash
+pytest                                      # усі тести
+pytest -v                                   # з назвою кожного тесту
+pytest --cov --cov-report=term-missing      # з покриттям
+pytest --cov --cov-report=html              # HTML-звіт у htmlcov/index.html
+```
+
+| Файл | Що перевіряє |
+|---|---|
+| `tests/test_tours.py` | Ресурс `tours`: GET, POST, PUT, DELETE для аноніма, користувача й адміна; 400, 401, 403, 404; логування |
+| `tests/test_permissions.py` | Права на туроператорів і напрямки; 409 при видаленні оператора з турами |
+| `tests/test_auth.py` | Реєстрація (валідація, хешування пароля), логін, refresh, `/me`; пароль не потрапляє в лог |
+
+## Логування
+
+Логи пишуться в консоль і в `logs/tourhub.log` (ротація: 5 МБ × 3 файли). Рівень задає `LOG_LEVEL`.
+Паролі, токени й тіла запитів не логуються.
 
 ## Автентифікація (JWT)
 
