@@ -21,13 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
+load_dotenv(BASE_DIR / '.env')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+def env_list(name, default=''):
+    return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
+
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('1', 'true', 'yes')
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 
 
 # Application definition
@@ -44,6 +49,7 @@ INSTALLED_APPS = [
     'tours',
     'rest_framework_simplejwt',
     'accounts',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -135,12 +141,7 @@ MAILERS = {
 }
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:63342",
-    "http://127.0.0.1:63342",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
 
 from datetime import timedelta
 
@@ -151,10 +152,59 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'TourHub API',
+    'DESCRIPTION': (
+        'REST API каталогу турів. Читати дані можуть усі; створювати й редагувати тури '
+        'можуть авторизовані користувачі; видаляти тури та змінювати туроператорів і '
+        'напрямки можуть лише адміністратори. Авторизація: JWT, заголовок '
+        '`Authorization: Bearer <access>`.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@2',
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '5'))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_DAYS', '1'))),
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'tourhub.log',
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 3,
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'tours': {'handlers': ['console', 'file'], 'level': LOG_LEVEL, 'propagate': False},
+        'accounts': {'handlers': ['console', 'file'], 'level': LOG_LEVEL, 'propagate': False},
+        'django.request': {'handlers': ['console', 'file'], 'level': 'ERROR', 'propagate': False},
+    },
 }

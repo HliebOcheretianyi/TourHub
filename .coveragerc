@@ -1,0 +1,15 @@
+[run]
+source = .
+omit =
+    venv/*
+    .venv/*
+    */migrations/*
+    tests/*
+    conftest.py
+    manage.py
+    tourhub/asgi.py
+    tourhub/wsgi.py
+
+[report]
+show_missing = True
+skip_covered = False
